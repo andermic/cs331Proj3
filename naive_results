@@ -1,11 +1,11 @@
 Without Numbers:
-    Training data set
+    Training vs. Training
         rec.sport.baseball: 92.44%
         comp.windows.x: 89.30%
         misc.forsale: 99.69%
         sci.electronics: 98.47%
 
-    Testing data set
+    Training vs. Testing            #WRONG, REGENERATE!
         rec.sport.baseball - 86.10%
         comp.windows.x - 79.20%
         misc.forsale - 96.30%
@@ -13,14 +13,20 @@ Without Numbers:
 
 
 With Numbers:
-    Training data set
+    Training vs. Training
         rec.sport.baseball - 93.05%
         comp.windows.x - 91.13%
         misc.forsale - 99.69%
         sci.electronics - 99.69%
 
-    Testing data set
+    Training vs. Testing            #WRONG, REGENERATE!
         rec.sport.baseball - 87.31%
         comp.windows.x - 82.57%
         misc.forsale - 95.68%
         sci.electronics - 93.88%
+
+    Testing vs. Testing
+    rec.sport.baseball - 91.57%
+    comp.windows.x - 90.49%
+    misc.forsale - 100.00%
+    sci.electronics - 90.83%

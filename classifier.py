@@ -115,6 +115,7 @@ while True:
     best_category = None
     best_prob = None
 
+    # COMMENT ME!!!
     for category in categories:
         cur_prob = 0
         for word_index in range(len(vocab_list)):
@@ -135,4 +136,4 @@ print
 print 'RESULTS:'
 for category in categories:
     print '%s - %.2f%%' % (category,
-     100 * float(correct_nums[category]) / float(record_nums[category]))
+     100 * float(correct_nums[category]) / float(record_nums[category]))    #RECORD NUMBER IS WRONG, FIX!!!
