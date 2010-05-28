@@ -7,7 +7,7 @@ Spring 2010
 """
 
 import os
-from math import log
+from zipfile import ZipFile
 
 # Takes a word and a list of words that are sorted alphabetically.
 #  Performs a recursive binary search and returns True if the word is in
@@ -93,7 +93,7 @@ for word in vocab_list:
     output_file.write(word + ',')
 output_file.write('ClassLabel\n')
 
-# Write the feature lists out to a file.
+# Write the feature lists out to a file
 for feature_list in feature_lists:
     for word in vocab_list:
         if word in feature_list:

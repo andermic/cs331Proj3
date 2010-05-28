@@ -1,5 +1,6 @@
-#!/usr/bin/env/python
+#!/usr/bin/env python
 
+import os
 import sys
 from math import log
 
@@ -7,34 +8,47 @@ from math import log
 #                   Step 2 - Construct Bayesian Network                #
 ########################################################################
 
-counts = {}
-for category in categories:
-    counts[category] = {}
-# Write the feature lists out to a file. Since we have to iterate
-#  through everything here anyway, which is computationally expensive,
-#  might as well count occurrences of each word in each category.
-for feature_list in feature_lists:
-    count_dict = counts[feature_list['ClassLabel']]
-    for word in vocab_list:
-        if word in feature_list:
-            output_file.write(feature_list[word] + ',')
-            if word not in count_dict:
-                count_dict[word] = 1
-            else:
-                count_dict[word] += 1
-        else:
-            output_file.write('0,')
-    output_file.write(feature_list['ClassLabel'] + '\n')
-output_file.close()
+# Get training data from file. First get the vocab list
+TRAINING_FILE = 'training.txt'
+training_file = open('training.txt', 'r')
+vocab_list = training_file.readline()
+vocab_list = vocab_list.split(',')
+vocab_list = vocab_list[:-1]
 
-# Get the total number of records, and the number per category
+# Then count the occurrences of each word within a given category. Also
+#  count the total number of records in each category.
+counts = {}
+while True:
+    line = training_file.readline()
+    if line == '':  # Reached end of file, so break
+        break
+
+    # Make the feature vector string a list, grab its class label, and
+    #  give it its own dictionary if it does not already exist.
+    line = line.split(',')
+    class_label = line[-1]
+    if class_label not in counts:
+        counts[class_label] = {}
+
+    # Iterate through the feature list
+    for word_index in range(len(vocab_list)):
+        if line[word_index] == '1':
+            # Increment the word count, or create it if it does not yet
+            #  exist
+            if vocab_list[word_index] in counts[class_label]:
+                counts[class_label][vocab_list[word_index]] += 1
+            else:
+                counts[class_label][vocab_list[word_index]] = 1
+
+training_file.close()
+
 record_nums = {}
 total_records = 0
+categories = counts.keys()
 for category in categories:
     record_nums[category] = \
      len(os.listdir(os.path.join(training_root, category)))
     total_records += record_nums[category]
-
 probs = {}
 cprobs = {}
 # Calculate the expected probability that a random record will belong to
@@ -50,22 +64,14 @@ for category in categories:
 
         # Use Dirichlet Priors trick in calculation.
         probs[category][word] = \
-         (float(count + 1) / float(record_nums[category] + 2)))
+         (float(count + 1) / float(record_nums[category] + 2))
 
 
 ########################################################################
 #                       Step 3 - Test Network                          #
 ########################################################################
 
-# Decompress the testing zip file
-TESTING_ZIP_FILE = 'training_dataset.zip'
-destination = TESTING_ZIP_FILE[:TESTING_ZIP_FILE.rfind('.')]
-testing_file = ZipFile(TESTING_ZIP_FILE)
-testing_file.extractall(destination)
-testing_file.close()
-
-testing_root = os.path.join(destination, os.listdir(destination)[0])
-
+'''
 scores = {}
 # Walk through the files in the testing directory with the help of some
 #  python voodoo
@@ -91,10 +97,8 @@ for dir_name, subdir_names, file_names in directory_tree:
             if ord(char) >= ord('a') and ord(char) <= ord('z'):
                 token += char
             else:
-                # Check that the token is valid, in the vocabulary,
-                #  and not in the stoplist
-                if token and not binary_search(token, stoplist) and
-                 binary_search(token, vocab_list):
+                # Check that the token is valid and in the vocabulary
+                if token and binary_search(token, vocab_list):
                     cur_list[token] = '1'
                 token = ''  # Get ready for the next token
 
@@ -112,3 +116,4 @@ for dir_name, subdir_names, file_names in directory_tree:
             if not best_cat or best_score > cur_score:
                 best_cat = category
                 best_score = cur_score
+'''
