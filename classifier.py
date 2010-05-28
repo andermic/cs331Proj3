@@ -1,16 +1,33 @@
 #!/usr/bin/env python
 
+"""
+Written by Michael Anderson
+For CS331 - Introduction to Artificial Intelligence
+Spring 2010
+"""
+
 import os
 import sys
 from math import log
+
+# If the user does not provide the correct number of arguments, output a
+#  usage message.
+if len(sys.argv) != 5:
+    print 'USAGE: classifier.py <isBaseline> <stoplist file>',
+    print '<training data file> <testing data file>'
+    exit()
+
+isBaseline = sys.argv[1]
+training_file_name = sys.argv[3]
+testing_file_name = sys.argv[4]
+
 
 ########################################################################
 #                   Step 2 - Construct Bayesian Network                #
 ########################################################################
 
 # Get training data from file. First get the vocab list
-TRAINING_FILE_NAME = 'training.txt'
-training_file = open(TRAINING_FILE_NAME, 'r')
+training_file = open(training_file_name, 'r')
 vocab_list = training_file.readline()
 vocab_list = vocab_list.split(',')
 vocab_list = vocab_list[:-1]
@@ -75,8 +92,7 @@ for category in categories:
 ########################################################################
 
 # Get testing data from file. First get the vocab list
-TESTING_FILE_NAME = 'testing.txt'
-testing_file = open(TESTING_FILE_NAME, 'r')
+testing_file = open(testing_file_name, 'r')
 vocab_list = testing_file.readline()
 vocab_list = vocab_list.split(',')
 vocab_list = vocab_list[:-1]
@@ -86,12 +102,10 @@ for category in categories:
     correct_nums[category] = 0
 # For each file, predict its category using the training data. Keep
 #  track of the total number of correct guesses for each category.
-
-line_count = 0
-
+file_count = 0
 while True:
-    print 'Reading file ' + str(line_count)
-    line_count += 1
+    file_count += 1
+    print 'Classifying file ' + str(file_count)
     
     line = testing_file.readline()
     if line == '':  # Reached end of file, so break
@@ -108,8 +122,7 @@ while True:
                 if line[word_index] == '1':
                     cur_prob += log(probs[category][vocab_list[word_index]])
                 else:
-                    cur_prob += log(1 - probs[category][vocab_list[word_index]])
-        #print category, cur_prob
+                    cur_prob += log(1-probs[category][vocab_list[word_index]])
         if not best_category or cur_prob > best_prob:
             best_category = category
             best_prob = cur_prob
@@ -117,17 +130,6 @@ while True:
     actual_category = line[-1].strip()
     if best_category == actual_category:
         correct_nums[actual_category] += 1
-
-    ''''
-    print 'Actual category: ' + actual_category
-    print 'Best category: ' + best_category
-    print
-    print
-    print
-    '''
-
-    #if line_count > 5:
-    #    break
 
 print
 print 'RESULTS:'

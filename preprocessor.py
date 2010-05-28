@@ -2,11 +2,12 @@
 
 """
 Written by Michael Anderson
-For CS311 - Introduction to Artificial Intelligence
+For CS331 - Introduction to Artificial Intelligence
 Spring 2010
 """
 
 import os
+import sys
 from zipfile import ZipFile
 
 # Takes a word and a list of words that are sorted alphabetically.
@@ -23,15 +24,21 @@ def binary_search(word, list):
     elif word > list[mid]:
         return binary_search(word, list[mid:])
 
+# If the user does not provide the correct number of arguments, output a
+#  usage message.
+if len(sys.argv) != 2:
+    print 'USAGE: preprocessor.py <zipped directory>'
+    exit()
+
+zipped_dir = sys.argv[1]
 
 ########################################################################
 #                    Step 1 - Gather Training Data                     #
 ########################################################################
 
 # Decompress the training zip file
-TRAINING_ZIP_FILE = 'training_dataset.zip'
-destination = TRAINING_ZIP_FILE[:TRAINING_ZIP_FILE.rfind('.')]
-training_file = ZipFile(TRAINING_ZIP_FILE)
+destination = zipped_dir[:zipped_dir.rfind('.')]
+training_file = ZipFile(zipped_dir)
 training_file.extractall(destination)
 training_file.close()
 
@@ -71,7 +78,8 @@ for dir_name, subdir_names, file_names in directory_tree:
         for char in file:
             # Check if the character is a member of the alphabet. If so,
             #  append it to the current token.
-            if ord(char) >= ord('a') and ord(char) <= ord('z'):
+            if ( ord(char) >= ord('a') and ord(char) <= ord('z') ) or \
+               ( ord(char) >= ord('0') and ord(char) <= ord('9') ):
                 token += char
             else:
                 # Check that the token is valid and not in the stoplist
@@ -84,8 +92,8 @@ for dir_name, subdir_names, file_names in directory_tree:
         # Add the ClassLabel, the parent directory of this file
         cur_list['ClassLabel'] = dir_name[dir_name.rfind('/')+1:]
 
-OUTPUT_FILE_NAME = 'training.txt'
-output_file = open(OUTPUT_FILE_NAME, 'w')
+output_file_name = zipped_dir[:zipped_dir.find('_')] + '.txt'
+output_file = open(output_file_name, 'w')
 
 # Write the sorted vocabulary out to a file
 vocab_list = sorted(list(vocab_list))
