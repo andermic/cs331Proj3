@@ -9,8 +9,8 @@ from math import log
 ########################################################################
 
 # Get training data from file. First get the vocab list
-TRAINING_FILE = 'training.txt'
-training_file = open('training.txt', 'r')
+TRAINING_FILE_NAME = 'training.txt'
+training_file = open(TRAINING_FILE_NAME, 'r')
 vocab_list = training_file.readline()
 vocab_list = vocab_list.split(',')
 vocab_list = vocab_list[:-1]
@@ -18,6 +18,7 @@ vocab_list = vocab_list[:-1]
 # Then count the occurrences of each word within a given category. Also
 #  count the total number of records in each category.
 counts = {}
+record_nums = {}
 while True:
     line = training_file.readline()
     if line == '':  # Reached end of file, so break
@@ -26,9 +27,13 @@ while True:
     # Make the feature vector string a list, grab its class label, and
     #  give it its own dictionary if it does not already exist.
     line = line.split(',')
-    class_label = line[-1]
+    class_label = line[-1].strip()
     if class_label not in counts:
         counts[class_label] = {}
+        record_nums[class_label] = 0
+
+    # Keep track of the total number of records found for each category
+    record_nums[class_label] += 1
 
     # Iterate through the feature list
     for word_index in range(len(vocab_list)):
@@ -42,13 +47,11 @@ while True:
 
 training_file.close()
 
-record_nums = {}
 total_records = 0
-categories = counts.keys()
+categories = record_nums.keys()
 for category in categories:
-    record_nums[category] = \
-     len(os.listdir(os.path.join(training_root, category)))
     total_records += record_nums[category]
+
 probs = {}
 cprobs = {}
 # Calculate the expected probability that a random record will belong to
@@ -71,49 +74,63 @@ for category in categories:
 #                       Step 3 - Test Network                          #
 ########################################################################
 
-'''
-scores = {}
-# Walk through the files in the testing directory with the help of some
-#  python voodoo
-directory_tree = os.walk(testing_root)
-for dir_name, subdir_names, file_names in directory_tree:
-    if dir_name != testing_root:
-        scores[category] = [0, len(os.listdir(dir_name))]
-    for file_name in file_names:
-        # Create a new feature list for this file
-        cur_list = {}
-        
-        # Get the contents of the given file. Make all letters
-        #  lowercase.
-        stream = open( os.path.join(dir_name, file_name), 'r' )
-        file = stream.read()
-        file = file.lower()
+# Get testing data from file. First get the vocab list
+TESTING_FILE_NAME = 'testing.txt'
+testing_file = open(TESTING_FILE_NAME, 'r')
+vocab_list = testing_file.readline()
+vocab_list = vocab_list.split(',')
+vocab_list = vocab_list[:-1]
 
-        # Tokenize the file contents
-        token = ''
-        for char in file:
-            # Check if the character is a member of the alphabet. If so,
-            #  append it to the current token.
-            if ord(char) >= ord('a') and ord(char) <= ord('z'):
-                token += char
-            else:
-                # Check that the token is valid and in the vocabulary
-                if token and binary_search(token, vocab_list):
-                    cur_list[token] = '1'
-                token = ''  # Get ready for the next token
+correct_nums = {}
+for category in categories:
+    correct_nums[category] = 0
+# For each file, predict its category using the training data. Keep
+#  track of the total number of correct guesses for each category.
 
-        # FINISH AND DOUBLECHECK ME!
-        # I PREDICT THE CATEGORY OF THE GIVEN FILE!
-        best_cat = None
-        best_score = None
-        for category in categories:
-            cur_score = 0
-            for word in vocab_list:
-                if word in cur_list:
-                    total_probs['category'] += log(probs[category][word])
+line_count = 0
+
+while True:
+    print 'Reading file ' + str(line_count)
+    line_count += 1
+    
+    line = testing_file.readline()
+    if line == '':  # Reached end of file, so break
+        break
+
+    line = line.split(',')
+    best_category = None
+    best_prob = None
+
+    for category in categories:
+        cur_prob = 0
+        for word_index in range(len(vocab_list)):
+            if vocab_list[word_index] in probs[category]:
+                if line[word_index] == '1':
+                    cur_prob += log(probs[category][vocab_list[word_index]])
                 else:
-                    total_prob['category'] += log(1 - probs[category][word])
-            if not best_cat or best_score > cur_score:
-                best_cat = category
-                best_score = cur_score
-'''
+                    cur_prob += log(1 - probs[category][vocab_list[word_index]])
+        #print category, cur_prob
+        if not best_category or cur_prob > best_prob:
+            best_category = category
+            best_prob = cur_prob
+
+    actual_category = line[-1].strip()
+    if best_category == actual_category:
+        correct_nums[actual_category] += 1
+
+    ''''
+    print 'Actual category: ' + actual_category
+    print 'Best category: ' + best_category
+    print
+    print
+    print
+    '''
+
+    #if line_count > 5:
+    #    break
+
+print
+print 'RESULTS:'
+for category in categories:
+    print '%s - %.2f%%' % (category,
+     100 * float(correct_nums[category]) / float(record_nums[category]))
