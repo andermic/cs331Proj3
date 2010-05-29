@@ -29,11 +29,20 @@ def binary_search(word, list):
 # If the user does not provide the correct number of arguments, output a
 #  usage message.
 if len(sys.argv) != 3:
-    print 'USAGE: preprocessor.py <zipped directory> <isBaseline>'
+    print 'USAGE: preprocessor.py <zipped directory> <advanced1> <advanced2>'
     exit()
 
 zipped_dir = sys.argv[1]
-isBaseline = sys.argv[2]
+
+# To throw out words that occur less than k times, give the word "true"
+#  (without quotes) as the advanced1 command line argument.
+advanced1 = sys.argv[2]
+
+# To add the k most frequently occurring bigrams and trigrams to the
+#  vocabulary list, give the word "true" (without quotes) as the
+#  advanced2 argument.
+'''advanced2 = sys.argv[3]'''
+
 
 ########################################################################
 #                    Step 1 - Gather Training Data                     #
@@ -87,7 +96,7 @@ for dir_name, subdir_names, file_names in directory_tree:
             else:
                 # Check that the token is valid and not in the stoplist
                 if token and not binary_search(token, stoplist):
-                    # Add the token to the vocab and feature list
+                    # Add the token to the vocab dict and feature list
                     if token not in vocab_dict:
                         vocab_dict[token] = 1
                     else:
@@ -100,10 +109,10 @@ for dir_name, subdir_names, file_names in directory_tree:
 
 # If the user chooses to run the advanced processor, then eliminate all
 #  words in the vocab dict that occur less than K_VALUE times.
-if isBaseline != 'true':
-    K_VALUE = 50
+if advanced1 == 'true':
+    K_ADVANCED1 = 5
     for key in vocab_dict.keys():
-        if vocab_dict[key] < K_VALUE:
+        if vocab_dict[key] < K_ADVANCED1:
             del(vocab_dict[key])
 
 output_file_name = zipped_dir[:zipped_dir.find('_')] + '.txt'

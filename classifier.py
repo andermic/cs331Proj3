@@ -80,6 +80,7 @@ cprobs = {}
 for category in categories:
     probs[category] = {}
     cprobs[category] = float(training_record_counts[category]) / float(total_records)
+
     for word in vocab_list:
         count = 0
         if word in counts[category]:
