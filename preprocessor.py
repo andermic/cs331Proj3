@@ -157,7 +157,7 @@ if advanced1 == 'true':
 # If using advanced Bayes augmentation 2, then add the K_ADVANCED2 most
 #  frequently occurring ngrams to the vocabulary list
 if advanced2 == 'true':
-    K_ADVANCED2 = 1000
+    K_ADVANCED2 = 25
     items = ngrams.items()
     
     # Sort ngrams in descending order by frequency
