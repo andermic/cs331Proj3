@@ -39,6 +39,7 @@ vocab_list = vocab_list[:-1]
 #  count the total number of records in each category.
 counts = {}
 training_record_counts = {}
+loop_num = 0
 while True:
     line = training_file.readline()
     if line == '':  # Reached end of file, so break
@@ -55,7 +56,7 @@ while True:
     # Keep track of the total number of records found for each category
     training_record_counts[class_label] += 1
 
-    # Iterate through the feature list
+    # Iterate through the current feature list
     for word_index in range(len(vocab_list)):
         if line[word_index] == '1':
             # Increment the word count, or create it if it does not yet
@@ -64,6 +65,9 @@ while True:
                 counts[class_label][vocab_list[word_index]] += 1
             else:
                 counts[class_label][vocab_list[word_index]] = 1
+
+    loop_num += 1
+    print 'Read in training vector: %d' % loop_num
 
 training_file.close()
 
@@ -151,10 +155,10 @@ while True:
         correct_counts[actual_category] += 1
     testing_record_counts[actual_category] += 1
 
-    # Output the number of records so far processed so user can see that
-    #  the program is actually doing something as the user waits
+    # Output the number of records so far classified so user can see
+    #  that the program is actually doing something during the wait
     record_count += 1
-    print 'Classified record ' + str(record_count)
+    print 'Classified testing record ' + str(record_count)
 
 print
 print 'RESULTS:'

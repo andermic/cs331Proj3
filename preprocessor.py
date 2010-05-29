@@ -28,7 +28,7 @@ def binary_search(word, list):
 
 # If the user does not provide the correct number of arguments, output a
 #  usage message.
-if len(sys.argv) != 3:
+if len(sys.argv) != 4:
     print 'USAGE: preprocessor.py <zipped directory> <advanced1> <advanced2>'
     exit()
 
@@ -41,7 +41,7 @@ advanced1 = sys.argv[2]
 # To add the k most frequently occurring bigrams and trigrams to the
 #  vocabulary list, give the word "true" (without quotes) as the
 #  advanced2 argument.
-'''advanced2 = sys.argv[3]'''
+advanced2 = sys.argv[3]
 
 
 ########################################################################
@@ -69,6 +69,12 @@ training_root = os.path.join(destination, os.listdir(destination)[0])
 categories = os.listdir(training_root)
 feature_lists = []
 vocab_dict = {}
+token = ''
+
+if advanced2 == 'true':
+    last_token = ''
+    last_last_token = ''
+    ngrams = {}
 
 # Walk through the files in the training directory with the help of some
 #  python voodoo
@@ -86,9 +92,8 @@ for dir_name, subdir_names, file_names in directory_tree:
         file = file.lower()
 
         # Tokenize the file contents
-        token = ''
         for char in file:
-            # Check if the character is alphanumerical. If so, append it
+            # Check if the character is alphanumeric. If so, append it
             #  to the current token.
             if ( ord(char) >= ord('a') and ord(char) <= ord('z') ) or \
                ( ord(char) >= ord('0') and ord(char) <= ord('9') ):
@@ -96,24 +101,70 @@ for dir_name, subdir_names, file_names in directory_tree:
             else:
                 # Check that the token is valid and not in the stoplist
                 if token and not binary_search(token, stoplist):
-                    # Add the token to the vocab dict and feature list
+                    # Add the token to the feature list, and track how
+                    #  often it occurs in the whole set in vocab_dict
                     if token not in vocab_dict:
                         vocab_dict[token] = 1
                     else:
                         vocab_dict[token] += 1
                     cur_list[token] = '1'
+
+                    # For the ngrams augmentation, add contiguous pairs
+                    #  and triples of valid tokens to the feature list.
+                    #  Track how often they occur in the whole set using
+                    #  ngrams
+                    if advanced2 == 'true':
+                        if last_token:
+                            bigram = '%s %s' % (last_token, token)
+                            if bigram not in ngrams:
+                                ngrams[bigram] = 1
+                            else:
+                                ngrams[bigram] += 1
+                            cur_list[bigram] = '1'
+                        if last_token and last_last_token:
+                            trigram = '%s %s %s' % (last_last_token, last_token, token)
+                            if trigram not in ngrams:
+                                ngrams[trigram] = 1
+                            else:
+                                ngrams[trigram] += 1
+                            cur_list[trigram] = '1'
+                        
+                        last_last_token = last_token
+                        last_token = token
+
                 token = ''  # Get ready for the next token
+
+        '''
+        ###DEBUG
+        for key in sorted(ngrams.keys()):
+            print '%s, %d\t' % (key, ngrams[key])
+        exit()
+        '''
 
         # Add the ClassLabel, the parent directory of this file
         cur_list['ClassLabel'] = dir_name[dir_name.rfind('/')+1:]
 
-# If the user chooses to run the advanced processor, then eliminate all
-#  words in the vocab dict that occur less than K_VALUE times.
+        print 'Processed record: ' + str(len(feature_lists))
+
+# If using advanced Bayes augmentation 1, then eliminate all words in
+#  the vocab dict that occur less than K_ADVANCED1 times.
 if advanced1 == 'true':
     K_ADVANCED1 = 5
     for key in vocab_dict.keys():
         if vocab_dict[key] < K_ADVANCED1:
             del(vocab_dict[key])
+
+# If using advanced Bayes augmentation 2, then add the K_ADVANCED2 most
+#  frequently occurring ngrams to the vocabulary list
+if advanced2 == 'true':
+    K_ADVANCED2 = 1000
+    items = ngrams.items()
+    
+    # Sort ngrams in descending order by frequency
+    items.sort(key=lambda item:item[1], reverse=True)
+    
+    for i in range(K_ADVANCED2):
+        vocab_dict[items[i][0]] = items[i][1]
 
 output_file_name = zipped_dir[:zipped_dir.find('_')] + '.txt'
 output_file = open(output_file_name, 'w')
@@ -125,11 +176,13 @@ for word in vocab_list:
 output_file.write('ClassLabel\n')
 
 # Write the feature lists out to a file
-for feature_list in feature_lists:
+for i in range(len(feature_lists)):
     for word in vocab_list:
-        if word in feature_list:
-            output_file.write(feature_list[word] + ',')
+        if word in feature_lists[i]:
+            output_file.write(feature_lists[i][word] + ',')
         else:
             output_file.write('0,')
-    output_file.write(feature_list['ClassLabel'] + '\n')
+    output_file.write(feature_lists[i]['ClassLabel'] + '\n')
+    
+    print 'Wrote feature list %d out to file' % (i + 1)
 output_file.close()
