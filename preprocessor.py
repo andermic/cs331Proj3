@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 """
-Written by Michael Anderson
+Written by Michael Anderson & Sean Moore
 For CS331 - Introduction to Artificial Intelligence
 Spring 2010
+
+Formats a group of zipped files for use in a Bayesian classifier
 """
 
 import os
@@ -26,11 +28,12 @@ def binary_search(word, list):
 
 # If the user does not provide the correct number of arguments, output a
 #  usage message.
-if len(sys.argv) != 2:
-    print 'USAGE: preprocessor.py <zipped directory>'
+if len(sys.argv) != 3:
+    print 'USAGE: preprocessor.py <zipped directory> <isBaseline>'
     exit()
 
 zipped_dir = sys.argv[1]
+isBaseline = sys.argv[2]
 
 ########################################################################
 #                    Step 1 - Gather Training Data                     #
@@ -56,7 +59,7 @@ training_root = os.path.join(destination, os.listdir(destination)[0])
 
 categories = os.listdir(training_root)
 feature_lists = []
-vocab_list = set([])
+vocab_dict = {}
 
 # Walk through the files in the training directory with the help of some
 #  python voodoo
@@ -76,8 +79,8 @@ for dir_name, subdir_names, file_names in directory_tree:
         # Tokenize the file contents
         token = ''
         for char in file:
-            # Check if the character is a member of the alphabet. If so,
-            #  append it to the current token.
+            # Check if the character is alphanumerical. If so, append it
+            #  to the current token.
             if ( ord(char) >= ord('a') and ord(char) <= ord('z') ) or \
                ( ord(char) >= ord('0') and ord(char) <= ord('9') ):
                 token += char
@@ -85,18 +88,31 @@ for dir_name, subdir_names, file_names in directory_tree:
                 # Check that the token is valid and not in the stoplist
                 if token and not binary_search(token, stoplist):
                     # Add the token to the vocab and feature list
-                    vocab_list.add(token)
+                    if token not in vocab_dict:
+                        vocab_dict[token] = 1
+                    else:
+                        vocab_dict[token] += 1
                     cur_list[token] = '1'
                 token = ''  # Get ready for the next token
 
         # Add the ClassLabel, the parent directory of this file
         cur_list['ClassLabel'] = dir_name[dir_name.rfind('/')+1:]
 
+# If the user chooses to run the advanced processor, then eliminate all
+#  words in the vocab dict that occur less than K times.
+K = 5
+if isBaseline != 'true':
+    for key in vocab_dict.keys():
+        if vocab_dict[key] < K:
+            del(vocab_dict[key])
+        else:
+            print key + ' ' + str(vocab_dict[key])
+
 output_file_name = zipped_dir[:zipped_dir.find('_')] + '.txt'
 output_file = open(output_file_name, 'w')
 
 # Write the sorted vocabulary out to a file
-vocab_list = sorted(list(vocab_list))
+vocab_list = sorted(vocab_dict.keys())
 for word in vocab_list:
     output_file.write(word + ',')
 output_file.write('ClassLabel\n')

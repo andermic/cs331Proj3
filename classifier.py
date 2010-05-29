@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
 """
-Written by Michael Anderson
+Written by Michael Anderson & Sean Moore
 For CS331 - Introduction to Artificial Intelligence
 Spring 2010
+
+Implements a Bayesian classifier that reads in pre-formatted training
+ and testing data, and uses the former to classify the latter.
 """
 
 import os
@@ -35,7 +38,7 @@ vocab_list = vocab_list[:-1]
 # Then count the occurrences of each word within a given category. Also
 #  count the total number of records in each category.
 counts = {}
-record_nums = {}
+training_record_counts = {}
 while True:
     line = training_file.readline()
     if line == '':  # Reached end of file, so break
@@ -47,10 +50,10 @@ while True:
     class_label = line[-1].strip()
     if class_label not in counts:
         counts[class_label] = {}
-        record_nums[class_label] = 0
+        training_record_counts[class_label] = 0
 
     # Keep track of the total number of records found for each category
-    record_nums[class_label] += 1
+    training_record_counts[class_label] += 1
 
     # Iterate through the feature list
     for word_index in range(len(vocab_list)):
@@ -65,9 +68,9 @@ while True:
 training_file.close()
 
 total_records = 0
-categories = record_nums.keys()
+categories = training_record_counts.keys()
 for category in categories:
-    total_records += record_nums[category]
+    total_records += training_record_counts[category]
 
 probs = {}
 cprobs = {}
@@ -76,7 +79,7 @@ cprobs = {}
 #  in a record of a given category. 
 for category in categories:
     probs[category] = {}
-    cprobs[category] = float(record_nums[category]) / float(total_records)
+    cprobs[category] = float(training_record_counts[category]) / float(total_records)
     for word in vocab_list:
         count = 0
         if word in counts[category]:
@@ -84,7 +87,7 @@ for category in categories:
 
         # Use Dirichlet Priors trick in calculation.
         probs[category][word] = \
-         (float(count + 1) / float(record_nums[category] + 2))
+         (float(count + 1) / float(training_record_counts[category] + 2))
 
 
 ########################################################################
@@ -97,16 +100,15 @@ vocab_list = testing_file.readline()
 vocab_list = vocab_list.split(',')
 vocab_list = vocab_list[:-1]
 
-correct_nums = {}
+correct_counts = {}
+testing_record_counts = {}
+record_count = 0
 for category in categories:
-    correct_nums[category] = 0
+    correct_counts[category] = 0
+    testing_record_counts[category] = 0
 # For each file, predict its category using the training data. Keep
 #  track of the total number of correct guesses for each category.
-file_count = 0
 while True:
-    file_count += 1
-    print 'Classifying file ' + str(file_count)
-    
     line = testing_file.readline()
     if line == '':  # Reached end of file, so break
         break
@@ -115,25 +117,49 @@ while True:
     best_category = None
     best_prob = None
 
-    # COMMENT ME!!!
+    # Calculate probability sums for each category, keep track of best
+    #  category so far found
     for category in categories:
-        cur_prob = 0
+        cur_prob = 0    # Initialize probability sum to 0
+        
+        # Add log(P(Y = v))
+        cur_prob += log(cprobs[category])
+        
+        # Add all log(P(Xj = uj | Y = v))
         for word_index in range(len(vocab_list)):
             if vocab_list[word_index] in probs[category]:
                 if line[word_index] == '1':
                     cur_prob += log(probs[category][vocab_list[word_index]])
                 else:
                     cur_prob += log(1-probs[category][vocab_list[word_index]])
+
+        # If the current category improves upon the best category so far
+        #  found, update best variables
         if not best_category or cur_prob > best_prob:
             best_category = category
             best_prob = cur_prob
 
+    # Grab the actual category of the record from the last entry in the
+    #  vector.
     actual_category = line[-1].strip()
+    
+    # If the guess was correct, increment number of correct guesses for
+    #  this record's category. Also increment the number of total
+    #  records processed for this category regardless.
     if best_category == actual_category:
-        correct_nums[actual_category] += 1
+        correct_counts[actual_category] += 1
+    testing_record_counts[actual_category] += 1
+
+    # Output the number of records so far processed so user can see that
+    #  the program is actually doing something as the user waits
+    record_count += 1
+    print 'Classified record ' + str(record_count)
 
 print
 print 'RESULTS:'
+# Calculate the percentage of correct guesses for each category. Use
+#  100 * (correct predictions in category) / (total records in category)
 for category in categories:
     print '%s - %.2f%%' % (category,
-     100 * float(correct_nums[category]) / float(record_nums[category]))    #RECORD NUMBER IS WRONG, FIX!!!
+     100 * float(correct_counts[category]) / \
+     float(testing_record_counts[category]))
