@@ -99,14 +99,12 @@ for dir_name, subdir_names, file_names in directory_tree:
         cur_list['ClassLabel'] = dir_name[dir_name.rfind('/')+1:]
 
 # If the user chooses to run the advanced processor, then eliminate all
-#  words in the vocab dict that occur less than K times.
-K = 5
+#  words in the vocab dict that occur less than K_VALUE times.
 if isBaseline != 'true':
+    K_VALUE = 50
     for key in vocab_dict.keys():
-        if vocab_dict[key] < K:
+        if vocab_dict[key] < K_VALUE:
             del(vocab_dict[key])
-        else:
-            print key + ' ' + str(vocab_dict[key])
 
 output_file_name = zipped_dir[:zipped_dir.find('_')] + '.txt'
 output_file = open(output_file_name, 'w')
