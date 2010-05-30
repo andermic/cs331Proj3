@@ -244,5 +244,3 @@ for i in range(len(feature_lists)):
     
     print 'Wrote feature list %d out to file' % (i + 1)
 output_file.close()
-
-print len(vocab_list)
