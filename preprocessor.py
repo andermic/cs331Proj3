@@ -11,6 +11,7 @@ Formats a group of zipped files for use in a Bayesian classifier
 import os
 import sys
 from zipfile import ZipFile
+from math import log
 
 # Takes a word and a list of words that are sorted alphabetically.
 #  Performs a recursive binary search and returns True if the word is in
@@ -28,20 +29,26 @@ def binary_search(word, list):
 
 # If the user does not provide the correct number of arguments, output a
 #  usage message.
-if len(sys.argv) != 4:
-    print 'USAGE: preprocessor.py <zipped directory> <advanced1> <advanced2>'
+if len(sys.argv) != 5:
+    print 'USAGE: preprocessor.py <zipped directory> <advanced1>',
+    print '<advanced2> <advanced3>'
     exit()
 
 zipped_dir = sys.argv[1]
 
-# To throw out words that occur less than k times, give the word "true"
-#  (without quotes) as the advanced1 command line argument.
+# To throw out features that occur less than k times, give the word
+#  "true" (without quotes) as the advanced1 command line argument.
 advanced1 = sys.argv[2]
 
 # To add the k most frequently occurring bigrams and trigrams to the
 #  vocabulary list, give the word "true" (without quotes) as the
-#  advanced2 argument.
+#  advanced2 command line argument.
 advanced2 = sys.argv[3]
+
+# To calculate with mutual information and use only the k most relevant
+#  features, give the word "true" (without quotes) as the advanced3
+#  command line argument.
+advanced3 = sys.argv[4]
 
 
 ########################################################################
@@ -76,10 +83,21 @@ if advanced2 == 'true':
     last_last_token = ''
     ngrams = {}
 
+if advanced3 == 'true':
+    records_per_cat = {}
+    feature_count_per_cat = {}
+    for category in categories:
+        feature_count_per_cat[category] = {}
+    total_records = 0
+
+directory_tree = os.walk(training_root)
 # Walk through the files in the training directory with the help of some
 #  python voodoo
-directory_tree = os.walk(training_root)
 for dir_name, subdir_names, file_names in directory_tree:
+    category = dir_name[dir_name.rfind('/')+1:]
+    if advanced3 == 'true':
+        records_per_cat[category] = len(file_names)
+        total_records += len(file_names)
     for file_name in file_names:
         # Create a new feature list for this file
         feature_lists.append({})
@@ -108,7 +126,7 @@ for dir_name, subdir_names, file_names in directory_tree:
                     else:
                         vocab_dict[token] += 1
                     cur_list[token] = '1'
-
+                    
                     # For the ngrams augmentation, add contiguous pairs
                     #  and triples of valid tokens to the feature list.
                     #  Track how often they occur in the whole set using
@@ -122,7 +140,8 @@ for dir_name, subdir_names, file_names in directory_tree:
                                 ngrams[bigram] += 1
                             cur_list[bigram] = '1'
                         if last_token and last_last_token:
-                            trigram = '%s %s %s' % (last_last_token, last_token, token)
+                            trigram = '%s %s %s' % \
+                             (last_last_token, last_token, token)
                             if trigram not in ngrams:
                                 ngrams[trigram] = 1
                             else:
@@ -132,22 +151,31 @@ for dir_name, subdir_names, file_names in directory_tree:
                         last_last_token = last_token
                         last_token = token
 
+
+                    if advanced3 == 'true':
+                        if token not in feature_count_per_cat[category]:
+                            feature_count_per_cat[category][token] = 1
+                        else:
+                            feature_count_per_cat[category][token] += 1
+
                 token = ''  # Get ready for the next token
 
-        '''
-        ###DEBUG
-        for key in sorted(ngrams.keys()):
-            print '%s, %d\t' % (key, ngrams[key])
-        exit()
-        '''
-
         # Add the ClassLabel, the parent directory of this file
-        cur_list['ClassLabel'] = dir_name[dir_name.rfind('/')+1:]
+        cur_list['ClassLabel'] = category
 
         print 'Processed record: ' + str(len(feature_lists))
 
-# If using advanced Bayes augmentation 1, then eliminate all words in
-#  the vocab dict that occur less than K_ADVANCED1 times.
+'''
+for i in range(1000):
+    print feature_count_per_cat[feature_count_per_cat.keys()[2]].keys()[i],
+    print feature_count_per_cat[feature_count_per_cat.keys()[2]][feature_count_per_cat[feature_count_per_cat.keys()[2]].keys()[i]]
+    print vocab_dict[feature_count_per_cat[feature_count_per_cat.keys()[2]].keys()[i]]
+print records_per_cat, total_records
+exit()
+'''
+
+# If using advanced Bayes augmentation 1, then eliminate all features
+#  that occur less than K_ADVANCED1 times in the set
 if advanced1 == 'true':
     K_ADVANCED1 = 5
     for key in vocab_dict.keys():
@@ -155,7 +183,7 @@ if advanced1 == 'true':
             del(vocab_dict[key])
 
 # If using advanced Bayes augmentation 2, then add the K_ADVANCED2 most
-#  frequently occurring ngrams to the vocabulary list
+#  frequently occurring ngrams to the vocabulary
 if advanced2 == 'true':
     K_ADVANCED2 = 25
     items = ngrams.items()
@@ -165,6 +193,45 @@ if advanced2 == 'true':
     
     for i in range(K_ADVANCED2):
         vocab_dict[items[i][0]] = items[i][1]
+
+# If using advanced Bayes augmentation 3, then keep only the K_ADVANCED3
+#  most relevant features in the vocabulary
+if advanced3 == 'true':
+    K_ADVANCED3 = 200
+
+    probs = {}
+    # Calculate P(X = x), P(Y = y), and P(X = x, Y = x) and use formula
+    #  from mutual information slides.
+    for category in categories:
+        py = float(records_per_cat[category] + 1) / \
+         float(total_records + len(categories))
+
+        for word in vocab_dict.keys():
+            px = float(vocab_dict[word] + 1) / float(total_records + 2)
+
+            count = 0
+            if word in feature_count_per_cat[category]:
+                count = feature_count_per_cat[category][word]
+
+            pxy = float(count + 1) / float(total_records + 2 * len(categories))
+
+            if word not in probs:
+                probs[word] = pxy * log( pxy / (px * py) )
+            else:
+                probs[word] += pxy * log( pxy / (px * py) )
+    
+    # Sort probabilities in descending order by frequency
+    items = sorted(probs.items(), key=lambda item:item[1], reverse=True)
+    
+    new_vocab_dict = {}
+    # Make a new dictionary that only contains K_ADVANCED3 of the most
+    #  relevant words
+    for i in range(K_ADVANCED3):
+        word = items[i][0]
+        new_vocab_dict[word] = vocab_dict[word]
+        #print items[i]
+
+    vocab_dict = new_vocab_dict
 
 output_file_name = zipped_dir[:zipped_dir.find('_')] + '.txt'
 output_file = open(output_file_name, 'w')

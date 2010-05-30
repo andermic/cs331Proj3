@@ -20,10 +20,9 @@ if len(sys.argv) != 5:
     print '<training data file> <testing data file>'
     exit()
 
-isBaseline = sys.argv[1]
+isBaseline = sys.argv[2]
 training_file_name = sys.argv[3]
 testing_file_name = sys.argv[4]
-
 
 ########################################################################
 #                   Step 2 - Construct Bayesian Network                #
@@ -83,7 +82,8 @@ cprobs = {}
 #  in a record of a given category. 
 for category in categories:
     probs[category] = {}
-    cprobs[category] = float(training_record_counts[category]) / float(total_records)
+    cprobs[category] = float(training_record_counts[category]) / \
+     float(total_records)
 
     for word in vocab_list:
         count = 0
