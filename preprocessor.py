@@ -165,19 +165,10 @@ for dir_name, subdir_names, file_names in directory_tree:
 
         print 'Processed record: ' + str(len(feature_lists))
 
-'''
-for i in range(1000):
-    print feature_count_per_cat[feature_count_per_cat.keys()[2]].keys()[i],
-    print feature_count_per_cat[feature_count_per_cat.keys()[2]][feature_count_per_cat[feature_count_per_cat.keys()[2]].keys()[i]]
-    print vocab_dict[feature_count_per_cat[feature_count_per_cat.keys()[2]].keys()[i]]
-print records_per_cat, total_records
-exit()
-'''
-
 # If using advanced Bayes augmentation 1, then eliminate all features
 #  that occur less than K_ADVANCED1 times in the set
 if advanced1 == 'true':
-    K_ADVANCED1 = 5
+    K_ADVANCED1 = 15
     for key in vocab_dict.keys():
         if vocab_dict[key] < K_ADVANCED1:
             del(vocab_dict[key])
@@ -185,7 +176,7 @@ if advanced1 == 'true':
 # If using advanced Bayes augmentation 2, then add the K_ADVANCED2 most
 #  frequently occurring ngrams to the vocabulary
 if advanced2 == 'true':
-    K_ADVANCED2 = 25
+    K_ADVANCED2 = 1000
     items = ngrams.items()
     
     # Sort ngrams in descending order by frequency
@@ -197,7 +188,7 @@ if advanced2 == 'true':
 # If using advanced Bayes augmentation 3, then keep only the K_ADVANCED3
 #  most relevant features in the vocabulary
 if advanced3 == 'true':
-    K_ADVANCED3 = 200
+    K_ADVANCED3 = 1000
 
     probs = {}
     # Calculate P(X = x), P(Y = y), and P(X = x, Y = x) and use formula
@@ -253,3 +244,5 @@ for i in range(len(feature_lists)):
     
     print 'Wrote feature list %d out to file' % (i + 1)
 output_file.close()
+
+print len(vocab_list)
