@@ -165,30 +165,10 @@ for dir_name, subdir_names, file_names in directory_tree:
 
         print 'Processed record: ' + str(len(feature_lists))
 
-# If using advanced Bayes augmentation 1, then eliminate all features
-#  that occur less than K_ADVANCED1 times in the set
-if advanced1 == 'true':
-    K_ADVANCED1 = 5
-    for key in vocab_dict.keys():
-        if vocab_dict[key] < K_ADVANCED1:
-            del(vocab_dict[key])
-
-# If using advanced Bayes augmentation 2, then add the K_ADVANCED2 most
-#  frequently occurring ngrams to the vocabulary
-if advanced2 == 'true':
-    K_ADVANCED2 = 25
-    items = ngrams.items()
-    
-    # Sort ngrams in descending order by frequency
-    items.sort(key=lambda item:item[1], reverse=True)
-    
-    for i in range(K_ADVANCED2):
-        vocab_dict[items[i][0]] = items[i][1]
-
 # If using advanced Bayes augmentation 3, then keep only the K_ADVANCED3
 #  most relevant features in the vocabulary
 if advanced3 == 'true':
-    K_ADVANCED3 = 50
+    K_ADVANCED3 = 1000
 
     probs = {}
     # Calculate P(X = x), P(Y = y), and P(X = x, Y = x) and use formula
@@ -223,6 +203,26 @@ if advanced3 == 'true':
         #print items[i]
 
     vocab_dict = new_vocab_dict
+
+# If using advanced Bayes augmentation 1, then eliminate all features
+#  that occur less than K_ADVANCED1 times in the set
+if advanced1 == 'true':
+    K_ADVANCED1 = 7
+    for key in vocab_dict.keys():
+        if vocab_dict[key] < K_ADVANCED1:
+            del(vocab_dict[key])
+
+# If using advanced Bayes augmentation 2, then add the K_ADVANCED2 most
+#  frequently occurring ngrams to the vocabulary
+if advanced2 == 'true':
+    K_ADVANCED2 = 500
+    items = ngrams.items()
+    
+    # Sort ngrams in descending order by frequency
+    items.sort(key=lambda item:item[1], reverse=True)
+    
+    for i in range(K_ADVANCED2):
+        vocab_dict[items[i][0]] = items[i][1]
 
 output_file_name = zipped_dir[:zipped_dir.find('_')] + '.txt'
 output_file = open(output_file_name, 'w')

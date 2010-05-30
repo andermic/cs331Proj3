@@ -315,30 +315,39 @@ Training vs. Testing
 TEST RESULTS FOR ALL THREE AUGMENTATIONS COMBINED
 ########################################################################
 
-    Mutual information K=1000, then Infrequent feature removal K=7, then Ngrams K=50
-    Size of final vocab list: 1050
-        rec.sport.baseball - 85.84%
-        comp.windows.x - 85.28%
-        misc.forsale - 89.81%
-        sci.electronics - 94.19%
+    Training vs. Training
+        Mutual information K=1000, then Infrequent feature removal K=7, then Ngrams K=500
+        Size of final vocab list: 1500
+            rec.sport.baseball - 82.78%
+            comp.windows.x - 85.32%
+            misc.forsale - 95.06%
+            sci.electronics - 96.64%
 
-    Mutual information K=1000, then Infrequent feature removal K=7, then Ngrams K=500
-    Size of final vocab list: 1500
-        rec.sport.baseball - 86.14%
-        comp.windows.x - 85.28%
-        misc.forsale - 91.05%
-        sci.electronics - 92.66%
+    Training vs. Testing
+        Mutual information K=1000, then Infrequent feature removal K=7, then Ngrams K=50
+        Size of final vocab list: 1050
+            rec.sport.baseball - 85.84%
+            comp.windows.x - 85.28%
+            misc.forsale - 89.81%
+            sci.electronics - 94.19%
 
-    Mutual information K=1000, then Infrequent feature removal K=7, then Ngrams K=1000
-    Size of final vocab list: 2000
-        rec.sport.baseball - 84.94%
-        comp.windows.x - 86.20%
-        misc.forsale - 91.36%
-        sci.electronics - 92.66%
+        Mutual information K=1000, then Infrequent feature removal K=7, then Ngrams K=500
+        Size of final vocab list: 1500
+            rec.sport.baseball - 86.14%
+            comp.windows.x - 85.28%
+            misc.forsale - 91.05%
+            sci.electronics - 92.66%
 
-    Mutual information K=1000, then Ngrams K=1000, then Infrequent feature removal K=15
-    Size of final vocab list: ~ 1300
-        rec.sport.baseball - 85.24%
-        comp.windows.x - 84.97%
-        misc.forsale - 90.43%
-        sci.electronics - 92.66%
+        Mutual information K=1000, then Infrequent feature removal K=7, then Ngrams K=1000
+        Size of final vocab list: 2000
+            rec.sport.baseball - 84.94%
+            comp.windows.x - 86.20%
+            misc.forsale - 91.36%
+            sci.electronics - 92.66%
+
+        Mutual information K=1000, then Ngrams K=1000, then Infrequent feature removal K=15
+        Size of final vocab list: ~ 1300
+            rec.sport.baseball - 85.24%
+            comp.windows.x - 84.97%
+            misc.forsale - 90.43%
+            sci.electronics - 92.66%
