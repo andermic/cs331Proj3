@@ -168,7 +168,7 @@ for dir_name, subdir_names, file_names in directory_tree:
 # If using advanced Bayes augmentation 1, then eliminate all features
 #  that occur less than K_ADVANCED1 times in the set
 if advanced1 == 'true':
-    K_ADVANCED1 = 15
+    K_ADVANCED1 = 5
     for key in vocab_dict.keys():
         if vocab_dict[key] < K_ADVANCED1:
             del(vocab_dict[key])
@@ -176,7 +176,7 @@ if advanced1 == 'true':
 # If using advanced Bayes augmentation 2, then add the K_ADVANCED2 most
 #  frequently occurring ngrams to the vocabulary
 if advanced2 == 'true':
-    K_ADVANCED2 = 1000
+    K_ADVANCED2 = 25
     items = ngrams.items()
     
     # Sort ngrams in descending order by frequency
@@ -188,7 +188,7 @@ if advanced2 == 'true':
 # If using advanced Bayes augmentation 3, then keep only the K_ADVANCED3
 #  most relevant features in the vocabulary
 if advanced3 == 'true':
-    K_ADVANCED3 = 1000
+    K_ADVANCED3 = 50
 
     probs = {}
     # Calculate P(X = x), P(Y = y), and P(X = x, Y = x) and use formula

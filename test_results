@@ -199,7 +199,7 @@ Training vs. Testing
         comp.windows.x - 82.82%
         misc.forsale - 95.68%
         sci.electronics - 93.88%
-    
+
     K = 1000
         rec.sport.baseball - 87.65%
         comp.windows.x - 82.52%
